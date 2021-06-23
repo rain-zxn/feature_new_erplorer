@@ -180,30 +180,6 @@ func (d *Dao) SelectTokenById(id uint32) (c []*model.ChainToken, err error) {
 	return
 }
 
-func (d *Dao) SelectTokenCount() (count *uint32, err error) {
-	count = new(uint32)
-	row := d.db.QueryRow(_selectTokenCount)
-	if err = row.Scan(&count); err != nil {
-		if err == sql.ErrNoRows {
-			err = nil
-		}
-		*count = uint32(0)
-	}
-	return
-}
-
-func (d *Dao) SelectMChainTxCount() (count *uint32, err error) {
-	count = new(uint32)
-	row := d.db.QueryRow(_selectMChainTxCount)
-	if err = row.Scan(&count); err != nil {
-		if err == sql.ErrNoRows {
-			err = nil
-		}
-		*count = uint32(0)
-	}
-	return
-}
-
 func (d *Dao) SelectMChainTxByHash(hash string) (res *model.MChainTx, err error) {
 	res = new(model.MChainTx)
 	row := d.db.QueryRow(_selectMChainTxByHash, hash)
@@ -356,13 +332,6 @@ func (d *Dao) SelectTChainTxByTime(chainId uint32, start uint32, end uint32) (re
 	return
 }
 
-func (d *Dao) TxUpdateChainInfoById(tx *sql.Tx, c *model.ChainInfo) (err error) {
-	if _, err = tx.Exec(_updateChainInfoById, c.Name, c.Url, c.Height, c.In, c.Out, c.Id); err != nil {
-		return
-	}
-	return
-}
-
 func (d *Dao) SelectChainAddresses(chainId uint32) (uint32, error) {
 	row := d.db.QueryRow(_selectChainAddresses, chainId, chainId)
 	var counter uint32
@@ -370,43 +339,6 @@ func (d *Dao) SelectChainAddresses(chainId uint32) (uint32, error) {
 		return 0, err
 	}
 	return counter, nil
-}
-
-func (d *Dao) SelectAllianceTx(height uint32, chain uint32) (res []*model.MChainTx, err error) {
-	var rows *sql.Rows
-	if rows, err = d.db.Query(_selectAllianceTx, chain, chain, height); err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		r := new(model.MChainTx)
-		if err = rows.Scan(&r.Chain, &r.TxHash, &r.State, &r.TT, &r.Fee, &r.Height, &r.FChain, &r.FTxHash, &r.TChain, &r.Key); err != nil {
-			rows = nil
-			return
-		}
-		res = append(res, r)
-	}
-	err = rows.Err()
-	return
-}
-
-func (d *Dao) SelectBitcoinTxUnConfirm(id uint32) (res []string, err error) {
-	var rows *sql.Rows
-	if rows, err = d.db.Query(_selectBitcoinUnconfirmTx, id, 0); err != nil {
-		return
-	}
-	defer rows.Close()
-
-	var txhash string
-	txhashs := make([]string, 0)
-	for rows.Next() {
-		if err = rows.Scan(&txhash); err != nil {
-			rows = nil
-			return nil, err
-		}
-		txhashs = append(txhashs, txhash)
-	}
-	return txhashs, nil
 }
 
 func (d *Dao) SelectTokenTxList(token string, start uint32, end uint32) (res []*model.TokenTx, err error) {
@@ -465,17 +397,6 @@ func (d *Dao) SelectAddressTxTotal(chainId uint32, addr string) (count *uint32, 
 			err = nil
 		}
 		*count = uint32(0)
-	}
-	return
-}
-
-func (d *Dao) InsertPolyValidator(height uint32, validators []string) (err error) {
-	validators_json, err := json.Marshal(validators)
-	if err != nil {
-		return
-	}
-	if _, err = d.db.Exec(_insertPolyValidator, height, string(validators_json)); err != nil {
-		return
 	}
 	return
 }

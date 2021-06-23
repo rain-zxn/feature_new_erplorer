@@ -18,7 +18,6 @@
 package dao
 
 import (
-	"github.com/polynetwork/explorer/internal/log"
 	"github.com/polynetwork/explorer/internal/model"
 )
 
@@ -62,26 +61,6 @@ func (d *Dao) MChainTxByFTx(fTxHash string) (res *model.MChainTx, err error) {
 		return
 	}
 	err = d.AddMChainTxByFTx(res)
-	return
-}
-
-func (d *Dao) InsertMChainTxAndCache(m *model.MChainTx) (err error) {
-	err = d.InsertMChainTx(m)
-	if err != nil {
-		return
-	}
-	err = d.AddMChainTx(m)
-	if err != nil {
-		log.Warnf("InsertMChainTxAndCache: AddMChainTx", err)
-		err = nil
-		return
-	}
-	err = d.AddMChainTxByFTx(m)
-	if err != nil {
-		log.Warnf("InsertMChainTxAndCache: AddMChainTxByFTx", err)
-		err = nil
-		return
-	}
 	return
 }
 
