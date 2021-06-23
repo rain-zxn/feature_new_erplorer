@@ -22,42 +22,26 @@ import (
 	cosmos_types "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/joeqian10/neo-gogogo/helper"
+	ontcommon "github.com/ontio/ontology/common"
 	"github.com/polynetwork/explorer/internal/common"
 	"github.com/polynetwork/explorer/internal/conf"
-	"github.com/polynetwork/explorer/internal/ctx"
 	"github.com/polynetwork/explorer/internal/dao"
-	"github.com/polynetwork/explorer/internal/log"
 	"github.com/polynetwork/explorer/internal/model"
-	restclient "github.com/polynetwork/explorer/internal/server/restful/client"
-	"github.com/polynetwork/explorer/internal/server/rpc/client"
-	ontcommon "github.com/ontio/ontology/common"
 	"github.com/shopspring/decimal"
 	"strings"
 	"time"
 )
 
 type Service struct {
-	c              *conf.Config
-	dao            *dao.Dao
-	neoClient      *client.NeoClient
-	ethClient      *client.EthereumClient
-	ontClient      *client.OntologySDK
-	allianceClient *client.AllianceSDK
-	bitcoinClient  *restclient.BTCTools
-	cosmosClient   *client.CosmosClient
-	chain          []*model.ChainInfo
+	c     *conf.Config
+	dao   *dao.Dao
+	chain []*model.ChainInfo
 }
 
 func New(c *conf.Config) (s *Service) {
 	s = &Service{
-		c:              c,
-		dao:            dao.NEW(c),
-		neoClient:      client.NewNeoClient(c),
-		ethClient:      client.NewEthereumClient(c),
-		ontClient:      client.NewOntologySDK(c),
-		allianceClient: client.NewAllianceSDK(c),
-		bitcoinClient:  restclient.NewBtcTools(c),
-		cosmosClient:   client.NewCosmosClient(c),
+		c:     c,
+		dao:   dao.NEW(c),
 		chain: make([]*model.ChainInfo, 0),
 	}
 	return s
@@ -71,14 +55,13 @@ func (s *Service) Ping() (err error) {
 // Close Service
 func (s *Service) Close() {
 	s.dao.Close()
-	s.ethClient.Close()
 }
 
 func (exp *Service) GetChainInfos() []*model.ChainInfo {
 	// get all chains
 	chainInfos, err := exp.dao.SelectAllChainInfos()
 	if err != nil {
-		panic( err)
+		panic(err)
 	}
 	if chainInfos == nil {
 		panic("GetExplorerInfo: can't get AllChainInfos")
@@ -99,54 +82,6 @@ func (exp *Service) GetChainInfos() []*model.ChainInfo {
 		chainInfo.Tokens = chainTokens
 	}
 	return chainInfos
-}
-
-func (exp *Service) Start(context *ctx.Context) {
-	exp.CheckChains(context)
-	t := time.NewTicker(10 * time.Second)
-	for {
-		select {
-		case <-t.C:
-			exp.CheckChains(context)
-		case <-context.Context.Done():
-			log.Infof("stop service start routine!")
-			return
-		}
-	}
-}
-
-func (exp *Service) CheckChains(context *ctx.Context) {
-	chainInfoNew := exp.GetChainInfos()
-	chainInfoOld := exp.chain
-	exp.chain = chainInfoNew
-	if exp.c.Server.Master == 0 {
-		return
-	}
-	for _, chainNew := range chainInfoNew {
-		exist := false
-		for _, chainOld := range chainInfoOld {
-			if chainOld.Id == chainNew.Id {
-				exist = true
-				break
-			}
-		}
-		if exist == true {
-			continue
-		}
-		if chainNew.Id == common.CHAIN_POLY {
-			go exp.LoadAllianceCrossTxFromChain(context)
-		} else if chainNew.Id == common.CHAIN_BTC {
-			go exp.MonitorBtcChainFromAlliance(context)
-		} else if chainNew.Id == common.CHAIN_ETH {
-			go exp.LoadEthCrossTxFromChain(context)
-		} else if chainNew.Id == common.CHAIN_ONT {
-			go exp.LoadOntCrossTxFromChain(context)
-		} else if chainNew.Id == common.CHAIN_NEO {
-			go exp.LoadNeoCrossTxFromChain(context)
-		} else if chainNew.Id == common.CHAIN_COSMOS {
-			go exp.LoadCosmosCrossTxFromChain(context)
-		}
-	}
 }
 
 func (exp *Service) TxType2Name(ttype uint32) string {
@@ -182,7 +117,7 @@ func (exp *Service) AssetInfo(tokenHash string) (string, string) {
 	return "unknow token", "unknow token"
 }
 
-func (exp *Service) GetToken(tokenHash string) (*model.ChainToken) {
+func (exp *Service) GetToken(tokenHash string) *model.ChainToken {
 	for _, chainInfo := range exp.chain {
 		for _, token := range chainInfo.Tokens {
 			if token.Hash == tokenHash {
@@ -193,7 +128,7 @@ func (exp *Service) GetToken(tokenHash string) (*model.ChainToken) {
 	return nil
 }
 
-func (exp *Service) SearchToken(name string, chainId uint32) (*model.ChainToken) {
+func (exp *Service) SearchToken(name string, chainId uint32) *model.ChainToken {
 	for _, chainInfo := range exp.chain {
 		if chainInfo.Id != chainId {
 			continue
@@ -285,4 +220,3 @@ func (exp *Service) DayOfTimeSubOne(t uint32) uint32 {
 	time_t_unix := uint32(end_t_new.AddDate(0, 0, -1).Unix())
 	return time_t_unix
 }
-

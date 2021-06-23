@@ -32,12 +32,7 @@ type Config struct {
 	Redis    *Redis    `json:"redis"`
 	Mysql    *MySQL    `json:"mysql"`
 	Server   *Server   `json:"server"`
-	Neo      *Neo      `json:"neo"`
-	Ontology *Ontology `json:"ontology"`
-	Ethereum *Ethereum `json:"ethereum"`
 	Alliance *Alliance `json:"alliance"`
-	Bitcoin  *Bitcoin  `json:"btc"`
-	Cosmos   *Cosmos   `json:"cosmos"`
 }
 
 type Redis struct {
@@ -68,56 +63,20 @@ type Server struct {
 	HttpKeyPath        string `json:"http_key_path"`
 }
 
-type Bitcoin struct {
-	Name          string        `json:"name"`
-	ChainId       uint32        `json:"chainId"`
-	User          []string        `json:"user"`
-	Passwd        []string        `json:"passwd"`
-	Rawurl        []string        `json:"rawurl"`
-	BlockDuration time.Duration `json:"block_duration"`
-}
-type Neo struct {
-	Name          string        `json:"name"`
-	ChainId       uint32        `json:"chainId"`
-	Rawurl        []string        `json:"rawurl"`
-	BlockDuration time.Duration `json:"block_duration"`
-}
-type Ethereum struct {
-	Name          string        `json:"name"`
-	ChainId       uint32        `json:"chainId"`
-	Rawurl        []string        `json:"rawurl"`
-	BlockDuration time.Duration `json:"block_duration"`
-	Proxy         string        `json:"proxy"`
-	BTCX          string        `json:"btcx"`
-}
-type Cosmos struct {
+type Alliance struct {
 	Name          string        `json:"name"`
 	ChainId       uint32        `json:"chainId"`
 	Rawurl        []string      `json:"rawurl"`
 	BlockDuration time.Duration `json:"block_duration"`
 }
 
-type Ontology struct {
-	Name          string        `json:"name"`
-	ChainId       uint32        `json:"chainId"`
-	Rawurl        []string        `json:"rawurl"`
-	BlockDuration time.Duration `json:"block_duration"`
-}
-
-type Alliance struct {
-	Name          string        `json:"name"`
-	ChainId       uint32        `json:"chainId"`
-	Rawurl        []string        `json:"rawurl"`
-	BlockDuration time.Duration `json:"block_duration"`
-}
-
 type Contract struct {
-	Address         string  `json:"address"`
-	Chain           uint32  `json:"chain"`
+	Address string `json:"address"`
+	Chain   uint32 `json:"chain"`
 }
 type Token struct {
-	Name            string  `json:"name"`
-	Contracts       []Contract  `json:"contracts"`
+	Name      string     `json:"name"`
+	Contracts []Contract `json:"contracts"`
 }
 
 var DefConfig = NewConfig()

@@ -25,12 +25,10 @@
 //
 // swagger:meta
 
-
 package restful
 
 import (
 	"github.com/polynetwork/explorer/internal/conf"
-	"github.com/polynetwork/explorer/internal/ctx"
 	"github.com/polynetwork/explorer/internal/server/restful/error"
 	"github.com/polynetwork/explorer/internal/service"
 	"strconv"
@@ -265,10 +263,6 @@ func GetLatestValidator(cmd map[string]interface{}) map[string]interface{} {
 	resp := ResponsePack(error.SUCCESS)
 	resp["result"] = result
 	return resp
-}
-
-func StartMonitorService(context *ctx.Context) {
-	go srv.Start(context)
 }
 
 func StopService() {

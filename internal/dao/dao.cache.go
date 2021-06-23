@@ -127,34 +127,6 @@ func (d *Dao) FChainTx(txHash string, chain uint32) (res *model.FChainTx, err er
 	return
 }
 
-func (d *Dao) InsertFChainTxAndCache(f *model.FChainTx) (err error) {
-	err = d.InsertFChainTx(f)
-	if err != nil {
-		return
-	}
-	err = d.AddFChainTx(f)
-	if err != nil {
-		log.Warnf("InsertFChainTxAndCache: AddFChainTx", err)
-		err = nil
-		return
-	}
-	return
-}
-
-func (d *Dao) TxInsertFChainTxAndCache(tx *sql.Tx, f *model.FChainTx) (err error) {
-	err = d.TxInsertFChainTx(tx, f)
-	if err != nil {
-		return
-	}
-	err = d.AddFChainTx(f)
-	if err != nil {
-		log.Warnf("TxInsertFChainTxAndCache: AddFChainTx", err)
-		err = nil
-		return
-	}
-	return
-}
-
 func (d *Dao) TChainTx(txHash string) (res *model.TChainTx, err error) {
 	addCache := true
 	res, err = d.CacheTChainTx(txHash)
@@ -197,46 +169,6 @@ func (d *Dao) TChainTxByMTx(txHash string) (res *model.TChainTx, err error) {
 		return
 	}
 	err = d.AddTChainTxByMTx(res)
-	return
-}
-
-func (d *Dao) InsertTChainTxAndCache(t *model.TChainTx) (err error) {
-	err = d.InsertTChainTx(t)
-	if err != nil {
-		return
-	}
-	err = d.AddTChainTx(t)
-	if err != nil {
-		log.Warnf("InsertTChainTxAndCache: AddTChainTx", err)
-		err = nil
-		return
-	}
-	err = d.AddTChainTxByMTx(t)
-	if err != nil {
-		log.Warnf("InsertTChainTxAndCache: AddTChainTxByMTx", err)
-		err = nil
-		return
-	}
-	return
-}
-
-func (d *Dao) TxInsertTChainTxAndCache(tx *sql.Tx, t *model.TChainTx) (err error) {
-	err = d.TxInsertTChainTx(tx, t)
-	if err != nil {
-		return
-	}
-	err = d.AddTChainTx(t)
-	if err != nil {
-		log.Warnf("TxInsertTChainTxAndCache: AddTChainTx", err)
-		err = nil
-		return
-	}
-	err = d.AddTChainTxByMTx(t)
-	if err != nil {
-		log.Warnf("TxInsertTChainTxAndCache: AddTChainTxByMTx", err)
-		err = nil
-		return
-	}
 	return
 }
 

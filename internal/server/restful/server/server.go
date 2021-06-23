@@ -51,11 +51,11 @@ type RestServer struct {
 }
 
 const (
-	GET_EXPLORER_INFO = "/api/v1/getexplorerinfo"
-	GET_CROSSTX       = "/api/v1/getcrosstx"
-	GET_CROSSTX_LIST  = "/api/v1/getcrosstxlist"
-	GET_TOKENTX_LIST  = "/api/v1/gettokentxlist"
-	GET_ADDRESSTX_LIST = "/api/v1/getaddresstxlist"
+	GET_EXPLORER_INFO    = "/api/v1/getexplorerinfo"
+	GET_CROSSTX          = "/api/v1/getcrosstx"
+	GET_CROSSTX_LIST     = "/api/v1/getcrosstxlist"
+	GET_TOKENTX_LIST     = "/api/v1/gettokentxlist"
+	GET_ADDRESSTX_LIST   = "/api/v1/getaddresstxlist"
 	GET_LATEST_VALIDATOR = "/api/v1/getlatestvalidator"
 )
 
@@ -63,7 +63,6 @@ const (
 func InitRestServer(context *ctx.Context) *RestServer {
 	rt := &RestServer{}
 	InitInterface()
-	StartMonitorService(context)
 	rt.router = NewRouter()
 	rt.registryMethod()
 	rt.initGetHandler()
@@ -113,13 +112,13 @@ func (this *RestServer) Start() error {
 // resigtry handler method
 func (this *RestServer) registryMethod() {
 	getMethodMap := map[string]Action{
-		GET_CROSSTX:       {name: "getcrosstx", handler: GetCrossTx},
-		GET_LATEST_VALIDATOR:       {name: "getlatestvalidator", handler: GetLatestValidator},
+		GET_CROSSTX:          {name: "getcrosstx", handler: GetCrossTx},
+		GET_LATEST_VALIDATOR: {name: "getlatestvalidator", handler: GetLatestValidator},
 	}
 	postMethodMap := map[string]Action{
-		GET_CROSSTX_LIST: {name: "getcrosstxlist", handler: GetCrossTxList},
-		GET_EXPLORER_INFO: {name: "getexplorerinfo", handler: GetExplorerInfo},
-		GET_TOKENTX_LIST: {name: "gettokentxlist", handler: GetTokenTxList},
+		GET_CROSSTX_LIST:   {name: "getcrosstxlist", handler: GetCrossTxList},
+		GET_EXPLORER_INFO:  {name: "getexplorerinfo", handler: GetExplorerInfo},
+		GET_TOKENTX_LIST:   {name: "gettokentxlist", handler: GetTokenTxList},
 		GET_ADDRESSTX_LIST: {name: "getaddresstxlist", handler: GetAddressTxList},
 	}
 	this.postMap = postMethodMap
@@ -128,9 +127,9 @@ func (this *RestServer) registryMethod() {
 
 func (this *RestServer) getPath(url string) string {
 	/*
-	if strings.Contains(url, strings.TrimRight(GET_CROSSTX, ":txhash")) {
-		return GET_CROSSTX
-	}
+		if strings.Contains(url, strings.TrimRight(GET_CROSSTX, ":txhash")) {
+			return GET_CROSSTX
+		}
 	*/
 	return url
 }
