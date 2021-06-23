@@ -18,7 +18,6 @@
 package dao
 
 import (
-	"database/sql"
 	"github.com/polynetwork/explorer/internal/log"
 	"github.com/polynetwork/explorer/internal/model"
 )
@@ -80,26 +79,6 @@ func (d *Dao) InsertMChainTxAndCache(m *model.MChainTx) (err error) {
 	err = d.AddMChainTxByFTx(m)
 	if err != nil {
 		log.Warnf("InsertMChainTxAndCache: AddMChainTxByFTx", err)
-		err = nil
-		return
-	}
-	return
-}
-
-func (d *Dao) TxInsertMChainTxAndCache(tx *sql.Tx, m *model.MChainTx) (err error) {
-	err = d.TxInsertMChainTx(tx, m)
-	if err != nil {
-		return
-	}
-	err = d.AddMChainTx(m)
-	if err != nil {
-		log.Warnf("TxInsertMChainTxAndCache: AddMChainTx", err)
-		err = nil
-		return
-	}
-	err = d.AddMChainTxByFTx(m)
-	if err != nil {
-		log.Warnf("TxInsertMChainTxAndCache: AddMChainTxByFTx", err)
 		err = nil
 		return
 	}
