@@ -112,8 +112,7 @@ func (this *RestServer) Start() error {
 // resigtry handler method
 func (this *RestServer) registryMethod() {
 	getMethodMap := map[string]Action{
-		GET_CROSSTX:          {name: "getcrosstx", handler: GetCrossTx},
-		GET_LATEST_VALIDATOR: {name: "getlatestvalidator", handler: GetLatestValidator},
+		GET_CROSSTX: {name: "getcrosstx", handler: GetCrossTx},
 	}
 	postMethodMap := map[string]Action{
 		GET_CROSSTX_LIST:   {name: "getcrosstxlist", handler: GetCrossTxList},

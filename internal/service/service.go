@@ -57,33 +57,6 @@ func (s *Service) Close() {
 	s.dao.Close()
 }
 
-func (exp *Service) GetChainInfos() []*model.ChainInfo {
-	// get all chains
-	chainInfos, err := exp.dao.SelectAllChainInfos()
-	if err != nil {
-		panic(err)
-	}
-	if chainInfos == nil {
-		panic("GetExplorerInfo: can't get AllChainInfos")
-	}
-
-	// get all tokens and contracts
-	for _, chainInfo := range chainInfos {
-		chainContracts, err := exp.dao.SelectContractById(chainInfo.Id)
-		if err != nil {
-			panic(err)
-		}
-		chainInfo.Contracts = chainContracts
-
-		chainTokens, err := exp.dao.SelectTokenById(chainInfo.Id)
-		if err != nil {
-			panic(err)
-		}
-		chainInfo.Tokens = chainTokens
-	}
-	return chainInfos
-}
-
 func (exp *Service) TxType2Name(ttype uint32) string {
 	return "cross chain transfer"
 }

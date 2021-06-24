@@ -21,7 +21,7 @@ import (
 	"github.com/polynetwork/explorer/internal/model"
 )
 
-func (d *Dao) MChainTx(txHash string) (res *model.MChainTx, err error) {
+func (d *Dao) MChainTx(txHash string) (res *model.PolyTransaction, err error) {
 	addCache := true
 	res, err = d.CacheMChainTx(txHash)
 	if err != nil {
@@ -43,7 +43,7 @@ func (d *Dao) MChainTx(txHash string) (res *model.MChainTx, err error) {
 	return
 }
 
-func (d *Dao) MChainTxByFTx(fTxHash string) (res *model.MChainTx, err error) {
+func (d *Dao) MChainTxByFTx(fTxHash string) (res *model.PolyTransaction, err error) {
 	addCache := true
 	res, err = d.CacheMChainTxByFTx(fTxHash)
 	if err != nil {
@@ -64,7 +64,7 @@ func (d *Dao) MChainTxByFTx(fTxHash string) (res *model.MChainTx, err error) {
 	return
 }
 
-func (d *Dao) FChainTx(txHash string, chain uint32) (res *model.FChainTx, err error) {
+func (d *Dao) FChainTx(txHash string, chain uint32) (res *model.SrcTransaction, err error) {
 	addCache := true
 	res, err = d.CacheFChainTx(txHash)
 	if err != nil {
@@ -85,7 +85,7 @@ func (d *Dao) FChainTx(txHash string, chain uint32) (res *model.FChainTx, err er
 	return
 }
 
-func (d *Dao) TChainTx(txHash string) (res *model.TChainTx, err error) {
+func (d *Dao) TChainTx(txHash string) (res *model.DstTransaction, err error) {
 	addCache := true
 	res, err = d.CacheTChainTx(txHash)
 	if err != nil {
@@ -108,7 +108,7 @@ func (d *Dao) TChainTx(txHash string) (res *model.TChainTx, err error) {
 	return
 }
 
-func (d *Dao) TChainTxByMTx(txHash string) (res *model.TChainTx, err error) {
+func (d *Dao) TChainTxByMTx(txHash string) (res *model.DstTransaction, err error) {
 	addCache := true
 	res, err = d.CacheTChainTxByMTx(txHash)
 	if err != nil {

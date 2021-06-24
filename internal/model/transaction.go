@@ -44,98 +44,164 @@ type ChainToken struct {
 	Desc      string `json:"desc" gorm:"column:desc"`
 }
 
-type FChainTx struct {
-	Chain        uint32 `json:"chainid" gorm:"column:chain_id"`
-	TxHash       string `json:"txhash" gorm:"column:txhash"`
-	State        byte   `json:"state" gorm:"column:state"`
-	TT           uint32 `json:"timestamp" gorm:"column:tt"`
-	Fee          uint64 `json:"fee" gorm:"column:fee"`
-	Height       uint32 `json:"blockheight" gorm:"column:height"`
-	User         string `json:"user" gorm:"column:xuer"`
-	TChain       uint32 `json:"tchainid" gorm:"column:tchain"`
-	Contract     string `json:"contract" gorm:"column:contract"`
-	Key          string `json:"key" gorm:"column:xkey"`
-	Param        string `json:"value" gorm:"column:xparam"`
-	Transfer     *FChainTransfer
+//type FChainTx struct {
+//	Chain        uint32 `json:"chainid" gorm:"column:chain_id"`
+//	TxHash       string `json:"txhash" gorm:"column:txhash"`
+//	State        byte   `json:"state" gorm:"column:state"`
+//	TT           uint32 `json:"timestamp" gorm:"column:tt"`
+//	Fee          uint64 `json:"fee" gorm:"column:fee"`
+//	Height       uint32 `json:"blockheight" gorm:"column:height"`
+//	User         string `json:"user" gorm:"column:xuer"`
+//	TChain       uint32 `json:"tchainid" gorm:"column:tchain"`
+//	Contract     string `json:"contract" gorm:"column:contract"`
+//	Key          string `json:"key" gorm:"column:xkey"`
+//	Param        string `json:"value" gorm:"column:xparam"`
+//	Transfer     *FChainTransfer
+//}
+
+type SrcTransaction struct {
+	Id       int64  `json:"id" gorm:"column:id"`
+	Chain    uint32 `json:"chainid" gorm:"column:chain_id"`
+	TxHash   string `json:"txhash" gorm:"column:hash"`
+	State    byte   `json:"state" gorm:"column:state"`
+	TT       uint32 `json:"timestamp" gorm:"column:time"`
+	Fee      uint64 `json:"fee" gorm:"column:fee"`
+	Height   uint32 `json:"blockheight" gorm:"column:height"`
+	User     string `json:"user" gorm:"column:uer"`
+	TChain   uint32 `json:"tchainid" gorm:"column:dst_chain_id"`
+	Contract string `json:"contract" gorm:"column:contract"`
+	Key      string `json:"key" gorm:"column:key"`
+	Param    string `json:"value" gorm:"column:param"`
+	Transfer *SrcTransfer
 }
 
-type FChainTransfer struct {
-	TxHash       string `json:"txhash" gorm:"column:txhash"`
-	Asset        string `json:"asset" gorm:"column:asset"`
-	From         string `json:"from" gorm:"column:xfrom"`
-	To           string `json:"to" gorm:"column:xto"`
-	Amount       uint64 `json:"amount" gorm:"column:amount"`
-	ToChain      uint32 `json:"tochainid" gorm:"column:tochainid"`
-	ToAsset      string `json:"toasset" gorm:"column:toasset"`
-	ToUser       string `json:"touser" gorm:"column:touser"`
+//type FChainTransfer struct {
+//	TxHash       string `json:"txhash" gorm:"column:txhash"`
+//	Asset        string `json:"asset" gorm:"column:asset"`
+//	From         string `json:"from" gorm:"column:xfrom"`
+//	To           string `json:"to" gorm:"column:xto"`
+//	Amount       uint64 `json:"amount" gorm:"column:amount"`
+//	ToChain      uint32 `json:"tochainid" gorm:"column:tochainid"`
+//	ToAsset      string `json:"toasset" gorm:"column:toasset"`
+//	ToUser       string `json:"touser" gorm:"column:touser"`
+//}
+
+type SrcTransfer struct {
+	Id      int64  `json:"id" gorm:"column:id"`
+	TxHash  string `json:"txhash" gorm:"column:tx_hash"`
+	Asset   string `json:"asset" gorm:"column:asset"`
+	From    string `json:"from" gorm:"column:from"`
+	To      string `json:"to" gorm:"column:to"`
+	Amount  uint64 `json:"amount" gorm:"column:amount"`
+	ToChain uint32 `json:"tochainid" gorm:"column:dst_chain_id"`
+	ToAsset string `json:"toasset" gorm:"column:dst_asset"`
+	ToUser  string `json:"touser" gorm:"column:dst_user"`
 }
 
-type MChainTx struct {
+//type MChainTx struct {
+//	Chain   uint32 `json:"chainid" gorm:"column:chain_id"`
+//	TxHash  string `json:"txhash" gorm:"column:txhash"`
+//	State   byte   `json:"state" gorm:"column:state"`
+//	TT      uint32 `json:"timestamp" gorm:"column:tt"`
+//	Fee     uint64 `json:"fee" gorm:"column:fee"`
+//	Height  uint32 `json:"blockheight" gorm:"column:height"`
+//	FChain  uint32 `json:"fchain" gorm:"column:fchain"`
+//	FTxHash string `json:"ftxhash" gorm:"column:ftxhash"`
+//	TChain  uint32 `json:"tchain" gorm:"column:tchain"`
+//	Key     string `json:"key" gorm:"column:xkey"`
+//}
+
+type PolyTransaction struct {
+	Id      int64  `json:"id" gorm:"column:id"`
 	Chain   uint32 `json:"chainid" gorm:"column:chain_id"`
-	TxHash  string `json:"txhash" gorm:"column:txhash"`
+	TxHash  string `json:"txhash" gorm:"column:hash"`
 	State   byte   `json:"state" gorm:"column:state"`
-	TT      uint32 `json:"timestamp" gorm:"column:tt"`
+	TT      uint32 `json:"timestamp" gorm:"column:time"`
 	Fee     uint64 `json:"fee" gorm:"column:fee"`
 	Height  uint32 `json:"blockheight" gorm:"column:height"`
-	FChain  uint32 `json:"fchain" gorm:"column:fchain"`
-	FTxHash string `json:"ftxhash" gorm:"column:ftxhash"`
-	TChain  uint32 `json:"tchain" gorm:"column:tchain"`
-	Key     string `json:"key" gorm:"column:xkey"`
+	FChain  uint32 `json:"fchain" gorm:"column:src_chain_id"`
+	FTxHash string `json:"ftxhash" gorm:"column:src_hash"`
+	TChain  uint32 `json:"tchain" gorm:"column:dst_chain_id"`
+	Key     string `json:"key" gorm:"column:key"`
 }
 
-type TChainTx struct {
-	Chain        uint32 `json:"chainid" gorm:"column:chain_id"`
-	TxHash       string `json:"txhash" gorm:"column:txhash"`
-	State        byte   `json:"state" gorm:"column:state"`
-	TT           uint32 `json:"timestamp" gorm:"column:tt"`
-	Fee          uint64 `json:"fee" gorm:"column:fee"`
-	Height       uint32 `json:"blockheight" gorm:"column:height"`
-	FChain       uint32 `json:"fchain" gorm:"column:fchain"`
-	Contract     string `json:"contract" gorm:"column:contract"`
-	RTxHash      string `json:"rtxhash" gorm:"column:rtxhash"`
-	Transfer     *TChainTransfer
+//type TChainTx struct {
+//	Chain        uint32 `json:"chainid" gorm:"column:chain_id"`
+//	TxHash       string `json:"txhash" gorm:"column:txhash"`
+//	State        byte   `json:"state" gorm:"column:state"`
+//	TT           uint32 `json:"timestamp" gorm:"column:tt"`
+//	Fee          uint64 `json:"fee" gorm:"column:fee"`
+//	Height       uint32 `json:"blockheight" gorm:"column:height"`
+//	FChain       uint32 `json:"fchain" gorm:"column:fchain"`
+//	Contract     string `json:"contract" gorm:"column:contract"`
+//	RTxHash      string `json:"rtxhash" gorm:"column:rtxhash"`
+//	Transfer     *TChainTransfer
+//}
+
+type DstTransaction struct {
+	TxHash   string `json:"txhash" gorm:"column:hash"`
+	Chain    uint32 `json:"chainid"   gorm:"column:chain_id"`
+	State    byte   `json:"state"  gorm:"column:state"`
+	TT       uint32 `json:"timestamp"  gorm:"column:time"`
+	Fee      uint64 `json:"fee" gorm:"column:fee"`
+	Height   uint32 `json:"blockheight" gorm:"column:height"`
+	FChain   uint32 `json:"srcChainId" gorm:"column:src_chain_id"`
+	Contract string `json:"contract" gorm:"column:contract"`
+	RTxHash  string `json:"polyHash" gorm:"column:poly_hash"`
+	Transfer *DstTransfer
 }
 
-type TChainTransfer struct {
-	TxHash       string `json:"txhash" gorm:"column:txhash"`
-	Asset        string `json:"asset" gorm:"column:asset"`
-	From         string `json:"from" gorm:"column:xfrom"`
-	To           string `json:"to" gorm:"column:xto"`
-	Amount       uint64 `json:"amount" gorm:"column:amount"`
+//type TChainTransfer struct {
+//	TxHash       string `json:"txhash" gorm:"column:txhash"`
+//	Asset        string `json:"asset" gorm:"column:asset"`
+//	From         string `json:"from" gorm:"column:xfrom"`
+//	To           string `json:"to" gorm:"column:xto"`
+//	Amount       uint64 `json:"amount" gorm:"column:amount"`
+//}
+
+type DstTransfer struct {
+	Id       int64  `json:"id" gorm:"column:id"`
+	TxHash   string `json:"txhash" gorm:"column:tx_hash"`
+	Chain    uint32 `json:"chainid" gorm:"column:chain_id"`
+	Standard uint8  `json:"standard" gorm:"column:standard"`
+	TT       uint32 `json:"timestamp" gorm:"column:time"`
+	Asset    string `json:"asset" gorm:"column:asset"`
+	From     string `json:"from" gorm:"column:from"`
+	To       string `json:"to" gorm:"column:to"`
+	Amount   uint64 `json:"amount" gorm:"column:amount"`
 }
 
 type TokenTx struct {
-	TxHash       string `json:"txhash"`
-	From         string  `json:"from"`
-	To           string  `json:"to"`
-	Amount       uint64  `json:"amount"`
-	TT           uint32   `json:"timestamp"`
-	Height       uint32  `json:"blockheight"`
-	Direct       uint32  `json:"direct"`
+	TxHash string `json:"txhash"`
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Amount uint64 `json:"amount"`
+	TT     uint32 `json:"timestamp"`
+	Height uint32 `json:"blockheight"`
+	Direct uint32 `json:"direct"`
 }
-
 
 type AddressTx struct {
-	TxHash       string `json:"txhash"`
-	From         string  `json:"from"`
-	To           string  `json:"to"`
-	Asset        string  `json:"asset"`
-	Amount       uint64  `json:"amount"`
-	TT           uint32   `json:"timestamp"`
-	Height       uint32  `json:"blockheight"`
-	Direct       uint32  `json:"direct"`
+	TxHash string `json:"txhash"`
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Asset  string `json:"asset"`
+	Amount uint64 `json:"amount"`
+	TT     uint32 `json:"timestamp"`
+	Height uint32 `json:"blockheight"`
+	Direct uint32 `json:"direct"`
 }
 
-func (FChainTx) TableName() string {
-	return "fchain_tx"
+func (SrcTransaction) TableName() string {
+	return "src_transactions"
 }
 
-func (MChainTx) TableName() string {
-	return "mchain_tx"
+func (PolyTransaction) TableName() string {
+	return "poly_transactions"
 }
 
-func (TChainTx) TableName() string {
-	return "tchain_tx"
+func (DstTransaction) TableName() string {
+	return "dst_transactions"
 }
 
 func (ChainContract) TableName() string {

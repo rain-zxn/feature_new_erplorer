@@ -95,8 +95,8 @@ func (exp *Service) GetExplorerInfo(start uint32, end uint32) (int64, string) {
 		}
 		if exist == false {
 			crosschainTokenResp := &model.CrossChainTokenResp{
-				Name: token.Token,
-				Tokens: make([]*model.ChainTokenResp ,0),
+				Name:   token.Token,
+				Tokens: make([]*model.ChainTokenResp, 0),
 			}
 			crosschainTokenResp.Tokens = append(crosschainTokenResp.Tokens, token)
 			crosschainTokens = append(crosschainTokens, crosschainTokenResp)
@@ -112,7 +112,7 @@ func (exp *Service) GetExplorerInfo(start uint32, end uint32) (int64, string) {
 	explorerInfoResp := &model.ExplorerInfoResp{
 		Chains:        chainInfoResps,
 		CrossTxNumber: mChainInfo.In,
-		Tokens:   crosschainTokens,
+		Tokens:        crosschainTokens,
 	}
 	explorerInfoJsonResp, _ := json.Marshal(explorerInfoResp)
 	return myerror.SUCCESS, string(explorerInfoJsonResp)
@@ -120,7 +120,7 @@ func (exp *Service) GetExplorerInfo(start uint32, end uint32) (int64, string) {
 
 func (exp *Service) GetTokenTxList(token string, start uint32, end uint32) (int64, string) {
 	log.Infof("GetTokenTxList, token: %s", token)
-	tokenTxList, err := exp.dao.SelectTokenTxList(token, start, end - start + 1)
+	tokenTxList, err := exp.dao.SelectTokenTxList(token, start, end-start+1)
 	if err != nil {
 		return myerror.DB_CONNECTTION_FAILED, ""
 	}
@@ -135,7 +135,7 @@ func (exp *Service) GetTokenTxList(token string, start uint32, end uint32) (int6
 
 func (exp *Service) GetAddressTxList(chainId uint32, addr string, start uint32, end uint32) (int64, string) {
 	log.Infof("GetAddressTxList, chainid: %d, token: %s", chainId, addr)
-	addressTxList, err := exp.dao.SelectAddressTxList(chainId, addr, start, end - start + 1)
+	addressTxList, err := exp.dao.SelectAddressTxList(chainId, addr, start, end-start+1)
 	if err != nil {
 		return myerror.DB_CONNECTTION_FAILED, ""
 	}
@@ -171,9 +171,9 @@ func (exp *Service) GetCrossTx(hash string) (int64, string) {
 			CrossTxType: 0,
 		},
 	}
-	fChainTx := new(model.FChainTx)
-	mChainTx := new(model.MChainTx)
-	tChainTx := new(model.TChainTx)
+	fChainTx := new(model.SrcTransaction)
+	mChainTx := new(model.PolyTransaction)
+	tChainTx := new(model.DstTransaction)
 	var err error
 	log.Debug("*********************GetCrossTx phase 1************************")
 	if fChainTx, err = exp.dao.FChainTx(hash, common.CHAIN_ETH); err != nil {
@@ -282,11 +282,11 @@ func (exp *Service) outputChainInfos(chainInfos []*model.ChainInfo) []*model.Cha
 	chainInfoResps := make([]*model.ChainInfoResp, 0)
 	for _, chainInfo := range chainInfos {
 		chainInfoResp := &model.ChainInfoResp{
-			Id:        chainInfo.Id,
-			Name:      chainInfo.Name,
-			Height:    chainInfo.Height,
-			In:        chainInfo.In,
-			Out:       chainInfo.Out,
+			Id:     chainInfo.Id,
+			Name:   chainInfo.Name,
+			Height: chainInfo.Height,
+			In:     chainInfo.In,
+			Out:    chainInfo.Out,
 		}
 		chainInfoResps = append(chainInfoResps, chainInfoResp)
 	}
@@ -297,8 +297,8 @@ func (exp *Service) outputChainContracts(chainContracts []*model.ChainContract) 
 	chainContractResps := make([]*model.ChainContractResp, 0)
 	for _, chainContract := range chainContracts {
 		chainContractResp := &model.ChainContractResp{
-			Id:        chainContract.Id,
-			Contract:      chainContract.Contract,
+			Id:       chainContract.Id,
+			Contract: chainContract.Contract,
 		}
 		chainContractResps = append(chainContractResps, chainContractResp)
 	}
@@ -339,10 +339,10 @@ func (exp *Service) outputCrossChainTxStatus(status []*model.CrossChainTxStatus,
 	for i < len(status) && j < len(status_new) {
 		if status[i].TT == status_new[j].TT {
 			status_new[j].TxNumber = status[i].TxNumber
-			i ++
-			j ++
+			i++
+			j++
 		} else {
-			j ++
+			j++
 		}
 	}
 	return status_new
@@ -357,14 +357,14 @@ func (exp *Service) outputCrossChainTxStatus1(status []*model.CrossChainTxStatus
 	status_new := make([]*model.CrossChainTxStatus, 0)
 	for _, s := range status {
 		status_new = append(status_new, &model.CrossChainTxStatus{
-			TT: s.TT,
+			TT:       s.TT,
 			TxNumber: current_txnumber,
 		})
 		current_txnumber = current_txnumber - s.TxNumber
 		current_tt = s.TT
 	}
 	status_new = append(status_new, &model.CrossChainTxStatus{
-		TT: exp.DayOfTimeSubOne(current_tt),
+		TT:       exp.DayOfTimeSubOne(current_tt),
 		TxNumber: current_txnumber,
 	})
 
@@ -389,7 +389,7 @@ func (exp *Service) outputCrossChainTxStatus1(status []*model.CrossChainTxStatus
 	}
 
 	status_new = make([]*model.CrossChainTxStatus, 0)
-	ss := status_new1[len(status_new1) - 1]
+	ss := status_new1[len(status_new1)-1]
 	current_txnumber = ss.TxNumber
 	current_tt = exp.DayOfTime(start)
 	for current_tt < ss.TT {
@@ -399,8 +399,8 @@ func (exp *Service) outputCrossChainTxStatus1(status []*model.CrossChainTxStatus
 		})
 		current_tt = exp.DayOfTimeAddOne(current_tt)
 	}
-	for i := 0;i < len(status_new1);i ++ {
-		bb := status_new1[len(status_new1) - 1 - i]
+	for i := 0; i < len(status_new1); i++ {
+		bb := status_new1[len(status_new1)-1-i]
 		current_tt = bb.TT
 		current_txnumber = bb.TxNumber
 		if current_tt > exp.DayOfTimeUp(end) {
@@ -418,7 +418,7 @@ func (exp *Service) outputCrossChainTxStatus1(status []*model.CrossChainTxStatus
 	return status_new
 }
 
-func (exp *Service) outputCrossTransfer(chainid uint32, user string, transfer *model.FChainTransfer) *model.CrossTransferResp {
+func (exp *Service) outputCrossTransfer(chainid uint32, user string, transfer *model.SrcTransfer) *model.CrossTransferResp {
 	if transfer == nil {
 		return nil
 	}
@@ -441,14 +441,14 @@ func (exp *Service) outputCrossTransfer(chainid uint32, user string, transfer *m
 	return crossTransfer
 }
 
-func (exp *Service) outputFChainTx(fChainTx *model.FChainTx) *model.FChainTxResp {
+func (exp *Service) outputFChainTx(fChainTx *model.SrcTransaction) *model.FChainTxResp {
 	fChainTxResp := &model.FChainTxResp{
 		ChainId:    fChainTx.Chain,
 		ChainName:  exp.ChainId2Name(fChainTx.Chain),
 		TxHash:     fChainTx.TxHash,
 		State:      fChainTx.State,
 		TT:         fChainTx.TT,
-		Fee:        exp.FormatFee(fChainTx.Chain,fChainTx.Fee),
+		Fee:        exp.FormatFee(fChainTx.Chain, fChainTx.Fee),
 		Height:     fChainTx.Height,
 		User:       fChainTx.User,
 		TChainId:   fChainTx.TChain,
@@ -490,7 +490,7 @@ func (exp *Service) outputFChainTx(fChainTx *model.FChainTx) *model.FChainTxResp
 	return fChainTxResp
 }
 
-func (exp *Service) outputMChainTx(mChainTx *model.MChainTx) *model.MChainTxResp{
+func (exp *Service) outputMChainTx(mChainTx *model.PolyTransaction) *model.MChainTxResp {
 	mChainTxResp := &model.MChainTxResp{
 		ChainId:    mChainTx.Chain,
 		ChainName:  exp.ChainId2Name(mChainTx.Chain),
@@ -509,7 +509,7 @@ func (exp *Service) outputMChainTx(mChainTx *model.MChainTx) *model.MChainTxResp
 	return mChainTxResp
 }
 
-func (exp *Service) outputTChainTx(tChainTx *model.TChainTx) *model.TChainTxResp {
+func (exp *Service) outputTChainTx(tChainTx *model.DstTransaction) *model.TChainTxResp {
 	tChainTxResp := &model.TChainTxResp{
 		ChainId:    tChainTx.Chain,
 		ChainName:  exp.ChainId2Name(tChainTx.Chain),
@@ -525,9 +525,9 @@ func (exp *Service) outputTChainTx(tChainTx *model.TChainTx) *model.TChainTxResp
 	}
 	if tChainTx.Transfer != nil {
 		tChainTxResp.Transfer = &model.TChainTransferResp{
-			From:         tChainTx.Transfer.From,
-			To:           tChainTx.Transfer.To,
-			Amount:       strconv.FormatUint(tChainTx.Transfer.Amount, 10),
+			From:   tChainTx.Transfer.From,
+			To:     tChainTx.Transfer.To,
+			Amount: strconv.FormatUint(tChainTx.Transfer.Amount, 10),
 		}
 		token := exp.GetToken(tChainTx.Transfer.Asset)
 		tChainTxResp.Transfer.TokenHash = tChainTx.Transfer.Asset
@@ -546,19 +546,19 @@ func (exp *Service) outputTChainTx(tChainTx *model.TChainTx) *model.TChainTxResp
 	return tChainTxResp
 }
 
-func (exp *Service) outputCrossTxList(crossTxs []*model.MChainTx) *model.CrossTxListResp {
+func (exp *Service) outputCrossTxList(crossTxs []*model.PolyTransaction) *model.CrossTxListResp {
 	var crossTxListResp model.CrossTxListResp
 	crossTxListResp.CrossTxList = make([]*model.CrossTxOutlineResp, 0)
 	for _, mChainTx := range crossTxs {
 		crossTxListResp.CrossTxList = append(crossTxListResp.CrossTxList, &model.CrossTxOutlineResp{
-			TxHash: mChainTx.TxHash,
-			State:  mChainTx.State,
-			TT:     mChainTx.TT,
-			Fee:    mChainTx.Fee,
-			Height: mChainTx.Height,
-			FChainId: mChainTx.FChain,
+			TxHash:     mChainTx.TxHash,
+			State:      mChainTx.State,
+			TT:         mChainTx.TT,
+			Fee:        mChainTx.Fee,
+			Height:     mChainTx.Height,
+			FChainId:   mChainTx.FChain,
 			FChainName: exp.ChainId2Name(mChainTx.FChain),
-			TChainId: mChainTx.TChain,
+			TChainId:   mChainTx.TChain,
 			TChainName: exp.ChainId2Name(mChainTx.TChain),
 		})
 	}
@@ -577,11 +577,11 @@ func (exp *Service) outputTokenTxList(tokenHash string, tokenTxs []*model.TokenT
 		}
 		tokenTxListResp.TokenTxList = append(tokenTxListResp.TokenTxList, &model.TokenTxResp{
 			TxHash: tokenTx.TxHash,
-			From: tokenTx.From,
-			To: tokenTx.To,
+			From:   tokenTx.From,
+			To:     tokenTx.To,
 			Amount: amount,
 			Height: tokenTx.Height,
-			TT: tokenTx.TT,
+			TT:     tokenTx.TT,
 			Direct: tokenTx.Direct,
 		})
 	}
@@ -594,13 +594,13 @@ func (exp *Service) outputAddressTxList(addressTxs []*model.AddressTx, addressTx
 	addressTxListResp.AddressTxList = make([]*model.AddressTxResp, 0)
 	for _, addressTx := range addressTxs {
 		txresp := &model.AddressTxResp{
-			TxHash: addressTx.TxHash,
-			From: addressTx.From,
-			To: addressTx.To,
-			Amount: strconv.FormatUint(addressTx.Amount, 10),
-			Height: addressTx.Height,
-			TT: addressTx.TT,
-			Direct: addressTx.Direct,
+			TxHash:    addressTx.TxHash,
+			From:      addressTx.From,
+			To:        addressTx.To,
+			Amount:    strconv.FormatUint(addressTx.Amount, 10),
+			Height:    addressTx.Height,
+			TT:        addressTx.TT,
+			Direct:    addressTx.Direct,
 			TokenHash: addressTx.Asset,
 		}
 		token := exp.GetToken(addressTx.Asset)
@@ -613,14 +613,3 @@ func (exp *Service) outputAddressTxList(addressTxs []*model.AddressTx, addressTx
 	}
 	return &addressTxListResp
 }
-
-// GetCrossTx gets cross tx by Tx
-func (exp *Service) GetLatestValidator() (int64, string) {
-	validators, err := exp.dao.SelectPolyValidator()
-	if err != nil {
-		return myerror.DB_CONNECTTION_FAILED, ""
-	}
-	validators_json, _ := json.Marshal(validators)
-	return myerror.SUCCESS, string(validators_json)
-}
-
