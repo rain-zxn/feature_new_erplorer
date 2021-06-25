@@ -29,6 +29,12 @@ type ChainInfo struct {
 	Tokens    []*ChainToken    `gorm:"ForeignKey:tokens"`
 }
 
+type ChainStatistic struct {
+	Chain uint32 `gorm:"column:chain_id"`
+	In    uint32 `gorm:"column:in"`
+	Out   uint32 `gorm:"column:out"`
+}
+
 type ChainContract struct {
 	Id       uint32 `gorm:"column:id"`
 	Contract string `gorm:"column:contract"`

@@ -79,20 +79,34 @@ const (
 	//_selectTChainTransferByHash
 	_selectDstTransferByHash = "select tx_hash, asset, `from`, `to`, amount from dst_transfers where tx_hash = ?"
 	_selectChainAddresses    = "select count(distinct a) from (select distinct `from` as a from src_transfers aa left join src_transactions bb on aa.tx_hash = bb.hash where bb.chain_id = ? union all select distinct `to` as a from dst_transfers aa left join dst_transactions bb on aa.tx_hash = bb.hash where bb.chain_id = ?) c"
-	_selectChainInfoById     = "select xname, id, url, xtype, height, txin, txout from chain_info where id = ?"
-	_selectAllChainInfos     = "select xname, id, url, xtype, height, txin, txout from chain_info order by id"
-	_selectContractById      = "select id, contract from chain_contract where id = ?"
-	_selectTokenById         = "select id, xtoken, hash, xname, xtype, xprecision, xdesc from chain_token where id = ?"
-	_selectTokenTxList       = "select case when b.chain_id = ? then b.`key` else b.hash end as txhash,a.`from`,a.`to`,a.amount,b.height,b.time,1 as direct from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.asset = ? union all select d.hash,c.`from`,c.`to`,c.amount,d.height,d.time,2 as direct from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.asset = ? order by height desc limit ?,?;"
-	_selectTokenTxTotal      = "select sum(cnt) from (select count(*) as cnt from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.asset = ? union all select count(*) as cnt from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.asset = ?) t"
-	_selectAddressTxList     = "select case when b.chain_id = ? then b.`key` else b.hash end as txhash,a.`from`,a.`to`,a.asset,a.amount,b.height,b.time,1 as direct from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.`from` = ? and b.chain_id = ? union all select d.hash,c.`from`,c.`to`,c.asset,c.amount,d.height,d.time,2 as direct from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.`to` = ? and d.chain_id = ? order by height desc limit ?,?;"
-	_selectAddressTxTotal    = "select sum(cnt) from (select count(*) as cnt from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.`from` = ? and b.chain_id = ? union all select count(*) as cnt from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.`to` = ? and d.chain_id = ?) t"
+	//_selectChainInfoById     = "select xname, id, url, xtype, height, txin, txout from chain_info where id = ?"
+	_selectChainStatisticByChainId = "select chain_id, txin, txout from chain_statistic where chain_id = ?"
+
+	_selectAllChainInfos  = "select xname, id, url, xtype, height, txin, txout from chain_info order by id"
+	_selectContractById   = "select id, contract from chain_contract where id = ?"
+	_selectTokenById      = "select id, xtoken, hash, xname, xtype, xprecision, xdesc from chain_token where id = ?"
+	_selectTokenTxList    = "select case when b.chain_id = ? then b.`key` else b.hash end as txhash,a.`from`,a.`to`,a.amount,b.height,b.time,1 as direct from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.asset = ? union all select d.hash,c.`from`,c.`to`,c.amount,d.height,d.time,2 as direct from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.asset = ? order by height desc limit ?,?;"
+	_selectTokenTxTotal   = "select sum(cnt) from (select count(*) as cnt from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.asset = ? union all select count(*) as cnt from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.asset = ?) t"
+	_selectAddressTxList  = "select case when b.chain_id = ? then b.`key` else b.hash end as txhash,a.`from`,a.`to`,a.asset,a.amount,b.height,b.time,1 as direct from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.`from` = ? and b.chain_id = ? union all select d.hash,c.`from`,c.`to`,c.asset,c.amount,d.height,d.time,2 as direct from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.`to` = ? and d.chain_id = ? order by height desc limit ?,?;"
+	_selectAddressTxTotal = "select sum(cnt) from (select count(*) as cnt from src_transfers a left join src_transactions b on a.tx_hash = b.hash where a.`from` = ? and b.chain_id = ? union all select count(*) as cnt from dst_transfers c left join dst_transactions d on c.tx_hash = d.hash where c.`to` = ? and d.chain_id = ?) t"
 )
 
-func (d *Dao) SelectChainInfoById(id uint32) (res *model.ChainInfo, err error) {
-	res = new(model.ChainInfo)
-	row := d.db.QueryRow(_selectChainInfoById, id)
-	if err = row.Scan(&res.Name, &res.Id, &res.Url, &res.XType, &res.Height, &res.In, &res.Out); err != nil {
+//func (d *Dao) SelectChainInfoById(id uint32) (res *model.ChainInfo, err error) {
+//	res = new(model.ChainInfo)
+//	row := d.db.QueryRow(_selectChainInfoById, id)
+//	if err = row.Scan(&res.Name, &res.Id, &res.Url, &res.XType, &res.Height, &res.In, &res.Out); err != nil {
+//		if err == sql.ErrNoRows {
+//			err = nil
+//		}
+//		res = nil
+//	}
+//	return
+//}
+
+func (d *Dao) SelectChainStatisticByChainId(id uint32) (res *model.ChainStatistic, err error) {
+	res = new(model.ChainStatistic)
+	row := d.db.QueryRow(_selectChainStatisticByChainId, id)
+	if err = row.Scan(&res.Chain, &res.In, &res.Out); err != nil {
 		if err == sql.ErrNoRows {
 			err = nil
 		}

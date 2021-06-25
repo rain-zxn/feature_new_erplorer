@@ -104,14 +104,14 @@ func (exp *Service) GetExplorerInfo(start uint32, end uint32) (int64, string) {
 	}
 
 	// get cross chain tx
-	mChainInfo, err := exp.dao.SelectChainInfoById(exp.c.Alliance.ChainId)
-	if mChainInfo == nil {
-		log.Errorf("Can't get muti chain info")
+	chainStatistic, err := exp.dao.SelectChainStatisticByChainId(exp.c.Alliance.ChainId)
+	if chainStatistic == nil {
+		log.Errorf("Can't get muti chain statistic")
 		return myerror.DB_LOADDATA_FAILED, ""
 	}
 	explorerInfoResp := &model.ExplorerInfoResp{
 		Chains:        chainInfoResps,
-		CrossTxNumber: mChainInfo.In,
+		CrossTxNumber: chainStatistic.In,
 		Tokens:        crosschainTokens,
 	}
 	explorerInfoJsonResp, _ := json.Marshal(explorerInfoResp)
