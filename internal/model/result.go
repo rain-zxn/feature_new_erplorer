@@ -27,48 +27,87 @@
 
 package model
 
+import (
+	"github.com/polynetwork/explorer/basedef"
+)
+
 type ExplorerInfoReq struct {
 	Start        string    `json:"start"`
 	End          string    `json:"end"`
 }
 
-// swagger:parameters ExplorerInfoRequest
-type ExplorerInfoRequest struct {
-	// in: body
-	Body ExplorerInfoReq
-}
-
 type ExplorerInfoResp struct {
 	Chains        []*ChainInfoResp `json:"chains"`
-	CrossTxNumber uint32           `json:"crosstxnumber"`
+	CrossTxNumber int64           `json:"crosstxnumber"`
 	Tokens        []*CrossChainTokenResp `json:"tokens"`
 }
 
-// getexplorerinfo response
-// swagger:response ExplorerInfoResponse
-type ExplorerInfoResponse struct {
-	// response body
-	// in: body
-	Body struct {
-		Code          int                    `json:"code"`
-		Action        string                 `json:"action"`
-		Desc          string                 `json:"desc"`
-		Version       string                 `json:"version"`
-		Result        ExplorerInfoResp       `json:"result"`
+func getChainStatistic(chainId uint64, statistics []*ChainStatistic) *ChainStatistic {
+	for _, statistic := range statistics {
+		if statistic.ChainId == chainId {
+			return statistic
+		}
 	}
+	return nil
+}
+
+func MakeExplorerInfoResp(chains []*Chain, statistics []*ChainStatistic, tokenBasics []*TokenBasic) *ExplorerInfoResp {
+	chainInfoResps := make([]*ChainInfoResp, 0)
+	for _, chain := range chains {
+		chainInfoResp := MakeChainInfoResp(chain)
+		for _, statistic := range statistics {
+			if statistic.ChainId == *chain.ChainId {
+				chainInfoResp.Addresses = statistic.Addresses
+				chainInfoResp.In = statistic.In
+				chainInfoResp.Out = statistic.Out
+			}
+		}
+		for _, tokenBasic := range tokenBasics {
+			for _, token := range tokenBasic.Tokens {
+				if token.ChainId == *chain.ChainId {
+					chainInfoResp.Tokens = append(chainInfoResp.Tokens, MakeChainTokenResp(token))
+				}
+			}
+		}
+		chainInfoResps = append(chainInfoResps, chainInfoResp)
+	}
+	crossTxNumber := getChainStatistic(basedef.POLY_CROSSCHAIN_ID, statistics).In
+	crossChainTokenResp := make([]*CrossChainTokenResp, 0)
+	for _, tokenBasic := range tokenBasics {
+		crossChainTokenResp = append(crossChainTokenResp, MakeTokenBasicResp(tokenBasic))
+	}
+	explorerInfoResp := &ExplorerInfoResp{
+		Chains: chainInfoResps,
+		CrossTxNumber: crossTxNumber,
+		Tokens: crossChainTokenResp,
+	}
+	return explorerInfoResp
 }
 
 type ChainInfoResp struct {
 	Id        uint32               `json:"chainid"`
 	Name      string               `json:"chainname"`
 	Height    uint32               `json:"blockheight"`
-	In        uint32               `json:"in"`
-	InCrossChainTxStatus []*CrossChainTxStatus    `json:"incrosschaintxstatus"`
-	Out       uint32               `json:"out"`
-	OutCrossChainTxStatus []*CrossChainTxStatus    `json:"outcrosschaintxstatus"`
-	Addresses uint32               `json:"addresses"`
-	Contracts []*ChainContractResp `json:"contracts"`
+	In        int64               `json:"in"`
+	//InCrossChainTxStatus []*CrossChainTxStatus    `json:"incrosschaintxstatus"`
+	Out       int64               `json:"out"`
+	//OutCrossChainTxStatus []*CrossChainTxStatus    `json:"outcrosschaintxstatus"`
+	Addresses int64               `json:"addresses"`
+	//Contracts []*ChainContractResp `json:"contracts"`
 	Tokens    []*ChainTokenResp    `json:"tokens"`
+}
+
+func MakeChainInfoResp(chain *Chain) *ChainInfoResp {
+	chainInfoResp := &ChainInfoResp{
+		Id:        0,
+		Name:      "",
+		Height:    0,
+		In:        0,
+		Out:       0,
+		Addresses: 0,
+		Tokens:    nil,
+	}
+	return chainInfoResp
 }
 
 type CrossChainTxStatus struct {
@@ -92,9 +131,26 @@ type ChainTokenResp struct {
 	Desc        string `json:"desc"`
 }
 
+func MakeChainTokenResp(token *Token) *ChainTokenResp {
+	chainTokenResp := &ChainTokenResp{
+
+	}
+	return chainTokenResp
+}
+
 type CrossChainTokenResp struct {
 	Name      string             `json:"name"`
 	Tokens    []*ChainTokenResp  `json:"tokens"`
+}
+
+func MakeTokenBasicResp(tokenBasic *TokenBasic) *CrossChainTokenResp {
+	crossChainTokenResp := &CrossChainTokenResp{
+		Name: tokenBasic.Name,
+	}
+	for _, token := range tokenBasic.Tokens {
+		crossChainTokenResp.Tokens = append(crossChainTokenResp.Tokens, MakeChainTokenResp(token))
+	}
+	return crossChainTokenResp
 }
 
 type FChainTxResp struct {
@@ -241,30 +297,12 @@ type CrossTxListResp struct {
 	CrossTxList       []*CrossTxOutlineResp     `json:"crosstxs"`
 }
 
-// getcrosstxlist response
-// swagger:response CrossTxListResponse
-type CrossTxListResponse struct {
-	// response body
-	// in: body
-	Body struct {
-		Code          int                    `json:"code"`
-		Action        string                 `json:"action"`
-		Desc          string                 `json:"desc"`
-		Version       string                 `json:"version"`
-		Result        CrossTxListResp         `json:"result"`
-	}
-}
-
 type TokenTxListReq struct {
+	PageSize int
+	PageNo   int
+	ChainId uint64
 	Token       string     `json:"token"`
 }
-
-// swagger:parameters TokenTxListRequest
-type TokenTxListRequest struct {
-	// in: body
-	Body TokenTxListReq
-}
-
 
 type TokenTxResp struct {
 	TxHash       string `json:"txhash"`
@@ -278,36 +316,31 @@ type TokenTxResp struct {
 
 type TokenTxListResp struct {
 	TokenTxList       []*TokenTxResp     `json:"tokentxs"`
-	Total             uint32             `json:"total"`
+	Total             int64             `json:"total"`
 }
 
+func MakeTokenTxList(transactoins []*TransactionOnToken, tokenStatistic *TokenStatistic) *TokenTxListResp {
+	tokenTxListResp := &TokenTxListResp {
 
-// gettokentxlist response
-// swagger:response TokenTxListResponse
-type TokenTxListResponse struct {
-	// response body
-	// in: body
-	Body struct {
-		Code          int                    `json:"code"`
-		Action        string                 `json:"action"`
-		Desc          string                 `json:"desc"`
-		Version       string                 `json:"version"`
-		Result        TokenTxListResp        `json:"result"`
 	}
+	tokenTxListResp.Total = tokenStatistic.InCounter + tokenStatistic.OutCounter
+	tokenTxListResp.TokenTxList = make([]*TokenTxResp, 0)
+	for _, transactoin := range transactoins {
+		tokenTxListResp.TokenTxList = append(tokenTxListResp.TokenTxList, &TokenTxResp{
+			TxHash: transactoin.Hash,
+		})
+	}
+	return tokenTxListResp
 }
+
 
 
 type AddressTxListReq struct {
+	PageSize int
+	PageNo   int
 	Address       string     `json:"address"`
-	Chain         string     `json:"chain"`
+	ChainId         string     `json:"chain"`
 }
-
-// swagger:parameters AddressTxListRequest
-type AddressTxListRequest struct {
-	// in: body
-	Body AddressTxListReq
-}
-
 
 type AddressTxResp struct {
 	TxHash       string `json:"txhash"`
@@ -324,22 +357,21 @@ type AddressTxResp struct {
 
 type AddressTxListResp struct {
 	AddressTxList       []*AddressTxResp     `json:"addresstxs"`
-	Total               uint32               `json:"total"`
+	Total               int64               `json:"total"`
 }
 
+func MakeAddressTxList(transactoins []*TransactionOnAddress, counter int64) *AddressTxListResp {
+	addressTxListResp := &AddressTxListResp {
 
-// getaddresstxlist response
-// swagger:response AddressTxListResponse
-type AddressTxListResponse struct {
-	// response body
-	// in: body
-	Body struct {
-		Code          int                    `json:"code"`
-		Action        string                 `json:"action"`
-		Desc          string                 `json:"desc"`
-		Version       string                 `json:"version"`
-		Result        AddressTxListResp      `json:"result"`
 	}
+	addressTxListResp.Total = counter
+	addressTxListResp.AddressTxList = make([]*AddressTxResp, 0)
+	for _, transactoin := range transactoins {
+		addressTxListResp.AddressTxList = append(addressTxListResp.AddressTxList, &AddressTxResp{
+			TxHash: transactoin.Hash,
+		})
+	}
+	return addressTxListResp
 }
 
 
