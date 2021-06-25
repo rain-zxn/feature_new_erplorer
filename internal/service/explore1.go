@@ -125,133 +125,64 @@ func (c *ExplorerController) GetAddressTxList() {
 }
 
 // TODO GetCrossTxList gets Cross transaction list from start to end (to be optimized)
-func (exp *Service) GetCrossTxList(start int, end int) (int64, string) {
-	log.Infof("GetCrossTxList, start: %d, end: %d", start, end)
-	mChainTxs, err := exp.dao.SelectMChainTxByLimit(start, end-start+1)
-	if err != nil {
-		return myerror.DB_CONNECTTION_FAILED, ""
+func (c *ExplorerController) GetCrossTxList()  {
+	// get parameter
+	var crossTxListReq model.CrossTxListReq
+	var err error
+	if err = json.Unmarshal(c.Ctx.Input.RequestBody, &crossTxListReq); err != nil {
+		c.Data["json"] = model.MakeErrorRsp(fmt.Sprintf("request parameter is invalid!"))
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.ServeJSON()
 	}
-	crossTxListResp := exp.outputCrossTxList(mChainTxs)
-	crossTxsJsonResp, _ := json.Marshal(crossTxListResp)
-	return myerror.SUCCESS, string(crossTxsJsonResp)
+
+	srcPolyDstRelations := make([]*model.SrcPolyDstRelation, 0)
+	db.Model(&model.PolyTransaction{}).
+		Select("src_transactions.hash as src_hash, poly_transactions.hash as poly_hash, dst_transactions.hash as dst_hash").
+		Where("src_transactions.standard = ?", 0).
+		Joins("left join src_transactions on src_transactions.hash = poly_transactions.src_hash").
+		Joins("left join dst_transactions on poly_transactions.hash = dst_transactions.poly_hash").
+		Preload("SrcTransaction").
+		Preload("SrcTransaction.SrcTransfer").
+		Preload("PolyTransaction").
+		Preload("DstTransaction").
+		Preload("DstTransaction.DstTransfer").
+		Limit(crossTxListReq.PageSize).Offset(crossTxListReq.PageSize * crossTxListReq.PageNo).
+		Find(&srcPolyDstRelations)
+
+	var transactionNum int64
+	db.Model(&model.PolyTransaction{}).Where("src_transactions.standard = ?", 0).
+		Joins("left join src_transactions on src_transactions.hash = poly_transactions.src_hash").Count(&transactionNum)
+
+	c.Data["json"] = model.MakeCrossTxListResp(srcPolyDstRelations)
+	c.ServeJSON()
 }
 
 // GetCrossTx gets cross tx by Tx
-func (exp *Service) GetCrossTx(hash string) (int64, string) {
-	log.Infof("GetCrossTx: hash: %s", hash)
-	crosstx := &model.CrossTxResp{
-		Fchaintx_valid: false,
-		Mchaintx_valid: false,
-		Tchaintx_valid: false,
-		Transfer: &model.CrossTransferResp{
-			CrossTxType: 0,
-		},
-	}
-	fChainTx := new(model.SrcTransaction)
-	mChainTx := new(model.PolyTransaction)
-	tChainTx := new(model.DstTransaction)
+func (c *ExplorerController) GetCrossTx() {
+	var crossTxReq model.CrossTxReq
 	var err error
-	log.Debug("*********************GetCrossTx phase 1************************")
-	if fChainTx, err = exp.dao.FChainTx(hash, common.CHAIN_ETH); err != nil {
-		log.Errorf("GetCrossTx: get fChainTx %s", err)
-		return myerror.DB_CONNECTTION_FAILED, ""
-	} else if fChainTx != nil {
-		crosstx.Fchaintx_valid = true
-		if mChainTx, err = exp.dao.MChainTxByFTx(fChainTx.TxHash); err != nil {
-			log.Errorf("GetCrossTx: get mChainTx %s", err)
-			return myerror.DB_CONNECTTION_FAILED, ""
-		} else if mChainTx != nil {
-			crosstx.Mchaintx_valid = true
-			if tChainTx, err = exp.dao.TChainTxByMTx(mChainTx.TxHash); err != nil {
-				log.Errorf("GetCrossTx: get tChainTx %s", err)
-				return myerror.DB_CONNECTTION_FAILED, ""
-			} else if tChainTx != nil && tChainTx.State == 1 {
-				crosstx.Tchaintx_valid = true
-			}
-		}
+	if err = json.Unmarshal(c.Ctx.Input.RequestBody, &crossTxReq); err != nil {
+		c.Data["json"] = model.MakeErrorRsp(fmt.Sprintf("request parameter is invalid!"))
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.ServeJSON()
 	}
-
-	log.Debug("*********************GetCrossTx phase 2************************")
-	if !crosstx.Fchaintx_valid {
-		if mChainTx, err = exp.dao.MChainTx(hash); err != nil {
-			return myerror.DB_CONNECTTION_FAILED, ""
-		} else if mChainTx != nil {
-			crosstx.Mchaintx_valid = true
-			if fChainTx, err = exp.dao.FChainTx(mChainTx.FTxHash, common.CHAIN_POLY); err != nil {
-				log.Errorf("GetCrossTx: get fChainTx %s", err)
-				return myerror.DB_CONNECTTION_FAILED, ""
-			} else if fChainTx != nil {
-				crosstx.Fchaintx_valid = true
-				if tChainTx, err = exp.dao.TChainTxByMTx(mChainTx.TxHash); err != nil {
-					log.Errorf("GetCrossTx: get tChainTx %s", err)
-					return myerror.DB_CONNECTTION_FAILED, ""
-				} else if tChainTx != nil && tChainTx.State == 1 {
-					crosstx.Tchaintx_valid = true
-				}
-			}
-		}
-	}
-
-	log.Debug("*********************GetCrossTx phase 3************************")
-	if !(crosstx.Fchaintx_valid || crosstx.Mchaintx_valid) {
-		if tChainTx, err = exp.dao.TChainTx(hash); err != nil {
-			return myerror.DB_CONNECTTION_FAILED, ""
-		} else if tChainTx != nil {
-			crosstx.Tchaintx_valid = true
-			if mChainTx, err = exp.dao.MChainTx(tChainTx.RTxHash); err != nil {
-				log.Errorf("GetCrossTx: get mChainTx %s", err)
-				return myerror.DB_CONNECTTION_FAILED, ""
-			} else if mChainTx != nil {
-				crosstx.Mchaintx_valid = true
-				if fChainTx, err = exp.dao.FChainTx(mChainTx.FTxHash, common.CHAIN_POLY); err != nil {
-					log.Errorf("GetCrossTx: get fChainTx %s", err)
-					return myerror.DB_CONNECTTION_FAILED, ""
-				} else if fChainTx != nil {
-					if tChainTx.State == 0 {
-						crosstx.Tchaintx_valid = false
-					}
-					crosstx.Fchaintx_valid = true
-				}
-			}
-		}
-	}
-
-	outputType := 0
-	log.Debug("*********************GetCrossTx phase 4************************")
-	if crosstx.Fchaintx_valid {
-		xx, _ := json.Marshal(fChainTx)
-		log.Debugf("f chain tx: %s", string(xx))
-		crosstx.Transfer = exp.outputCrossTransfer(fChainTx.Chain, fChainTx.User, fChainTx.Transfer)
-		crosstx.Fchaintx = exp.outputFChainTx(fChainTx)
-		outputType = 1
-	}
-
-	if crosstx.Fchaintx_valid && crosstx.Mchaintx_valid {
-		xx, _ := json.Marshal(mChainTx)
-		log.Debugf("m chain tx: %s", string(xx))
-		crosstx.Mchaintx = exp.outputMChainTx(mChainTx)
-		outputType = 2
-	}
-
-	if crosstx.Fchaintx_valid && crosstx.Mchaintx_valid && crosstx.Tchaintx_valid {
-		xx, _ := json.Marshal(tChainTx)
-		log.Debugf("t chain tx: %s", string(xx))
-		crosstx.Tchaintx = exp.outputTChainTx(tChainTx)
-		outputType = 3
-	}
-
-	if outputType == 0 {
-		crosstx.Fchaintx_valid = false
-		crosstx.Mchaintx_valid = false
-		crosstx.Tchaintx_valid = false
-	} else if outputType == 1 {
-		crosstx.Mchaintx_valid = false
-		crosstx.Tchaintx_valid = false
-	} else if outputType == 2 {
-		crosstx.Tchaintx_valid = false
-	}
-	crossTxJson, _ := json.Marshal(crosstx)
-	return myerror.SUCCESS, string(crossTxJson)
+	srcPolyDstRelations := make([]*model.SrcPolyDstRelation, 0)
+	db.Model(&model.SrcTransaction{}).
+		Select("src_transactions.hash as src_hash, poly_transactions.hash as poly_hash, dst_transactions.hash as dst_hash, src_transactions.chain_id as chain_id, src_transactions.asset as token_hash").
+		Where("src_transactions.standard = ? and (src_transactions.hash = ? or poly_transactions.hash = ? or dst_transactions.hash = ?)", 0, crossTxReq.TxHash, crossTxReq.TxHash, crossTxReq.TxHash).
+		Joins("left join src_transfers on src_transactions.hash = src_transfers.tx_hash").
+		Joins("left join poly_transactions on src_transactions.hash = poly_transactions.src_hash").
+		Joins("left join dst_transactions on poly_transactions.hash = dst_transactions.poly_hash").
+		Preload("SrcTransaction").
+		Preload("SrcTransaction.SrcTransfer").
+		Preload("PolyTransaction").
+		Preload("DstTransaction").
+		Preload("DstTransaction.DstTransfer").
+		Preload("Token").
+		Preload("Token.TokenBasic").
+		Find(&srcPolyDstRelations)
+	c.Data["json"] = model.MakeCrossTxResp(srcPolyDstRelations)
+	c.ServeJSON()
 }
 
 func (exp *Service) outputChainInfos(chainInfos []*model.ChainInfo) []*model.ChainInfoResp {

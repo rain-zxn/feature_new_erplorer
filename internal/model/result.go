@@ -256,29 +256,14 @@ type CrossTxResp struct {
 	Tchaintx_valid bool               `json:"tchaintx_valid"`
 }
 
-// getcrosstx response
-// swagger:response CrossTxResponse
-type CrossTxResponse struct {
-	// response body
-	// in: body
-	Body struct {
-		Code          int                    `json:"code"`
-		Action        string                 `json:"action"`
-		Desc          string                 `json:"desc"`
-		Version       string                 `json:"version"`
-		Result        CrossTxResp            `json:"result"`
-	}
+func MakeCrossTxResp(srcPolyDst []*SrcPolyDstRelation) *CrossTxResp {
+	return nil
 }
+
 
 type CrossTxListReq struct {
-	Start        string    `json:"start"`
-	End          string    `json:"end"`
-}
-
-// swagger:parameters CrossTxListRequest
-type CrossTxListRequest struct {
-	// in: body
-	Body CrossTxListReq
+	PageSize int
+	PageNo   int
 }
 
 type CrossTxOutlineResp struct {
@@ -295,6 +280,18 @@ type CrossTxOutlineResp struct {
 
 type CrossTxListResp struct {
 	CrossTxList       []*CrossTxOutlineResp     `json:"crosstxs"`
+}
+
+func MakeCrossTxListResp(txs []*SrcPolyDstRelation) *CrossTxListResp {
+	crossTxListResp := &CrossTxListResp {
+	}
+	crossTxListResp.CrossTxList = make([]*CrossTxOutlineResp, 0)
+	for _, tx := range txs {
+		crossTxListResp.CrossTxList = append(crossTxListResp.CrossTxList, &CrossTxOutlineResp{
+			TxHash: tx.PolyHash,
+		})
+	}
+	return crossTxListResp
 }
 
 type TokenTxListReq struct {
