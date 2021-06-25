@@ -37,10 +37,13 @@ type TokenStatistic struct {
 	Id int64
 	ChainId uint64
 	Hash string
+	Token *Token `gorm:"foreignKey:Hash,ChainId;references:Hash,ChainId"`
 	InCounter int64
 	InAmount *BigInt
+	InAmountUsdt *BigInt
 	OutCounter int64
 	OutAmount *BigInt
+	OutAmountUsdt *BigInt
 }
 
 type Counter struct {

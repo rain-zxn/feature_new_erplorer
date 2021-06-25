@@ -135,6 +135,31 @@ func (c *ExplorerController) GetCrossTxList()  {
 		c.ServeJSON()
 	}
 
+
+	tokenStatistics := make([]*model.TokenStatistic, 0)
+	db.Raw("select count(*) in_counter,  sum(amount) as in_amount, asset as hash, chain_id as chain_id from dst_transfers group by chain_id, asset").
+		Preload("Token").Preload("Token.TokenBasic").
+		Find(&tokenStatistics)
+	for _, tokenStatistic := range tokenStatistics {
+		tokenStatistic.InAmountUsdt = tokenStatistic.InAmount/tokenStatistic.Token.Precision * tokenStatistic.Token.TokenBasic.Price
+	}
+	db.Save(&tokenStatistics)
+
+	db.Table("dst_transfers").Select("")
+	db.Model(&model.Token{}).
+		Select("src_transactions.hash as src_hash, poly_transactions.hash as poly_hash, dst_transactions.hash as dst_hash").
+		Where("src_transactions.standard = ?", 0).
+		Joins("left join src_transactions on src_transactions.hash = poly_transactions.src_hash").
+		Joins("left join dst_transactions on poly_transactions.hash = dst_transactions.poly_hash").
+		Preload("SrcTransaction").
+		Preload("SrcTransaction.SrcTransfer").
+		Preload("PolyTransaction").
+		Preload("DstTransaction").
+		Preload("DstTransaction.DstTransfer").
+		Limit(crossTxListReq.PageSize).Offset(crossTxListReq.PageSize * crossTxListReq.PageNo).
+		Find(&srcPolyDstRelations)
+
+
 	srcPolyDstRelations := make([]*model.SrcPolyDstRelation, 0)
 	db.Model(&model.PolyTransaction{}).
 		Select("src_transactions.hash as src_hash, poly_transactions.hash as poly_hash, dst_transactions.hash as dst_hash").
@@ -183,6 +208,14 @@ func (c *ExplorerController) GetCrossTx() {
 		Find(&srcPolyDstRelations)
 	c.Data["json"] = model.MakeCrossTxResp(srcPolyDstRelations)
 	c.ServeJSON()
+}
+
+func (c *ExplorerController) GetAssetStatistic() {
+
+}
+
+func (c *ExplorerController) GetTransferStatistic() {
+
 }
 
 func (exp *Service) outputChainInfos(chainInfos []*model.ChainInfo) []*model.ChainInfoResp {
